@@ -4,26 +4,45 @@ import java.util.Arrays;
 import java.util.HashMap;
 public class MemoryPool {
 
-    int memorySize = 16;
+    int memorySize;
 
-    int pageSize = 2;
+    static int DEFAULT_MEMORY_SIZE = 8;
+    static int DEFAULT_PAGE_SIZE = 2;
+    int pageSize;
 
-    int[] flag = new int[memorySize / pageSize];
+    int[] flag;
 
-    byte[] memory = new byte[memorySize];
+    byte[] memory;
 
-    ByteBuffer[] byteBuffers = new ByteBuffer[memorySize / pageSize];
+    ByteBuffer[] byteBuffers;
 
     HashMap<Integer, int[]> map = new HashMap<>();
 
     MemoryPool() {
+        memorySize = DEFAULT_MEMORY_SIZE;
+        pageSize = DEFAULT_PAGE_SIZE;
+        flag = new int[memorySize / pageSize];
+        byteBuffers = new ByteBuffer[memorySize / pageSize];
+
+        memory = new byte[memorySize];
+        for (int i = 0; i < byteBuffers.length; i++) {
+            byteBuffers[i] = ByteBuffer.wrap(memory, i * pageSize, pageSize);
+        }
+    }
+    MemoryPool(int capacity, int ps) {
+        if (capacity % ps != 0) throw new IllegalArgumentException("内存容量必须是页容量的整数倍！");
+        memorySize = capacity;
+        pageSize = ps;
+        flag = new int[memorySize / pageSize];
+        byteBuffers = new ByteBuffer[memorySize / pageSize];
+        memory = new byte[memorySize];
         for (int i = 0; i < byteBuffers.length; i++) {
             byteBuffers[i] = ByteBuffer.wrap(memory, i * pageSize, pageSize);
         }
     }
 
     public ByteBuffer allocate(int pages) {
-        if (pages == 0) throw new OutOfMemoryError("申请的空间不能是" + pages + "页！");
+        if (pages <= 0) throw new IllegalArgumentException("申请的空间不能是" + pages + "页！");
         int freeIndex = checkFree(pages);
         if (freeIndex == -1) throw new OutOfMemoryError("已经没有空闲的连续内存容纳" + pages + "页！");
         ByteBuffer merge = null;
@@ -96,48 +115,9 @@ public class MemoryPool {
 
 
     public static void main(String[] args) throws Exception {
-        BufferedReader br = new BufferedReader(new FileReader("test.txt"));
-        StreamTokenizer in = new StreamTokenizer(br);
-        PrintWriter out = new PrintWriter(new OutputStreamWriter(System.out));
+        MemoryPool memoryPool = new MemoryPool(5,2);
+        memoryPool.allocate(2);
 
-        in.nextToken();
-        int T = (int) in.nval;
-        for (int i = 0; i < T; i++) {
-            in.nextToken();
-            int pages = (int)in.nval;
-            MemoryPool memoryPool = new MemoryPool();
-            // 申请两页内存
-            ByteBuffer buffer = memoryPool.allocate(pages);
-            in.nextToken();
-            buffer.put((byte) (int)in.nval);
-            in.nextToken();
-            buffer.put((byte) (int)in.nval);
-            in.nextToken();
-            buffer.put((byte) (int)in.nval);
-            memoryPool.print(buffer);
-            in.nextToken();
-            buffer.put((byte) (int)in.nval);
-            memoryPool.print(buffer);
-            // 再申请一页内存
-            in.nextToken();
-            ByteBuffer buffer2 = memoryPool.allocate((int)in.nval);
-            in.nextToken();
-            buffer2.put((byte) (int)in.nval);
-            in.nextToken();
-            buffer2.put((byte) (int)in.nval);
-            memoryPool.print(buffer2);
-
-            System.out.println("释放内存前内存池中的情况：" + Arrays.toString(memoryPool.memory));
-            memoryPool.deallocate(buffer);
-            System.out.println("释放内存后内存池中的情况：" + Arrays.toString(memoryPool.memory));
-
-            // 申请maxPage + 1的内存
-            in.nextToken();
-            ByteBuffer buffer3 = memoryPool.allocate((int)in.nval);
-
-
-            System.out.println("结束了");
-        }
 
 
     }

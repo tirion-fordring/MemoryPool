@@ -19,17 +19,25 @@ public class MemoryPoolTest {
     }
 
     @Test
+    public void testConstructor() {
+        // 测试有参构造情况下容量和页数不是整数倍的关系
+        assertThrows(IllegalArgumentException.class, () -> {
+            new MemoryPool(7,2);
+        },"测试没有通过！参数是非法的");
+    }
+
+    @Test
     public void testAllocate() {
-        // 测试分配内存的合法情况
-        ByteBuffer buffer = memoryPool.allocate(2);
-        assertNotNull(buffer);
-        assertEquals(4, buffer.remaining());
-        try {
-            // 测试申请空间超过总空间的情况
+        // 测试页数是非法状态的情况
+        assertThrows(IllegalArgumentException.class, () -> {
+            ByteBuffer buffer = memoryPool.allocate(-1);
+        },"测试为通过！参数是非法的");
+        // 正常申请的状态
+        ByteBuffer buffer1 = memoryPool.allocate(2);
+        assertEquals(4, buffer1.remaining());
+        assertThrows(OutOfMemoryError.class, () -> {
             ByteBuffer buffer2 = memoryPool.allocate(10);
-        } catch (OutOfMemoryError e) {
-            assertEquals("已经没有空闲的连续内存容纳10页！", e.getMessage());
-        }
+        },"测试没有通过！申请的内存已经大于可用空间");
     }
 
     // 用于测试回收指定空间的方法deallocate(ByteBuffer byteBuffer)
