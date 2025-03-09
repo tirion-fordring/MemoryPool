@@ -18,29 +18,8 @@ public class MemoryPool {
     static int DEFAULT_PAGE_SIZE = 2;
     static int DEFAULT_PRE_ASSIGN_PAGES = 1;
 
-
-    int[] flag;
-
-    byte[] memory;
-
-    ByteBuffer[] byteBuffers;
-
-    HashMap<Integer, int[]> map = new HashMap<>();
-
     MemoryPool() {
-        memorySize = DEFAULT_MEMORY_SIZE;
-        pageSize = DEFAULT_PAGE_SIZE;
-        preAssignPage = DEFAULT_PRE_ASSIGN_PAGES;
-        assignButNotUsed = new ArrayDeque<>();
-        totalPage = 0;
-        freePage = 0;
-        freeSize = memorySize;
-        for (int i = 0; i < preAssignPage; i++) {
-            assignButNotUsed.add(ByteBuffer.allocate(pageSize));
-            totalPage++;
-            freePage++;
-            freeSize -= pageSize;
-        }
+        this(DEFAULT_MEMORY_SIZE, DEFAULT_PAGE_SIZE, DEFAULT_PRE_ASSIGN_PAGES);
     }
     MemoryPool(int capacity, int pagesize, int preassignpage) {
         memorySize = capacity;
